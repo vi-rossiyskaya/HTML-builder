@@ -26,7 +26,7 @@ async function combineStyles() {
   styles.forEach(async (file) => {
     const filePath = join(stylesPath, file.name);
     await combineFiles(filePath);
-  })
+  });
 }
 
 combineStyles();
