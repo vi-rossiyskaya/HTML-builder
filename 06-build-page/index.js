@@ -1,11 +1,5 @@
-const { readFile, mkdir, copyFile, writeFile } = require('fs/promises');
+const { readFile, readdir, mkdir, copyFile, writeFile, access, rm } = require('fs/promises');
 const { join } = require('path');
-
-async function makeDir(path, name) {
-  const dirCopyPath = join(path, name);
-  const dirCreation = await mkdir(dirCopyPath, { recursive: true });
-  return dirCreation;
-}
 
 async function findTemplates(path) {
   const fileContent = await readFile(path, 'utf-8');
@@ -34,9 +28,37 @@ async function buildHtml() {
   await writeFile(distHtmlPath, contentWithComponents);
 }
 
+async function clearDestinationDir(path) {
+  try {
+    await access(path);
+    await rm(path, { recursive: true });
+    await mkdir(path, { recursive: true });
+  } catch {
+    await mkdir(path, { recursive: true });
+  }
+}
+
+async function makeDirCopy(srcPath, copyPath) {
+  const content = await readdir(srcPath, { withFileTypes: true });
+  content.forEach((item) => {
+    const updatedSrcPath = join(srcPath, item.name);
+    const updatedCopyPath = join(copyPath, item.name);
+    if(item.isDirectory()) {
+      mkdir(join(copyPath, item.name), { recursive: true });
+      makeDirCopy(updatedSrcPath, updatedCopyPath).catch(console.error);
+    } else {
+      copyFile(updatedSrcPath, updatedCopyPath).catch(console.error);
+    }
+  });
+}
+
 async function buildPage() {
-  await makeDir(__dirname, 'project-dist');
+  mkdir(join(__dirname, 'project-dist'), { recursive: true });
   await buildHtml();
+  const srcAssetsPath = join(__dirname, 'assets');
+  const copyAssetsPath = join(__dirname, 'project-dist', 'assets');
+  await clearDestinationDir(copyAssetsPath);
+  await makeDirCopy(srcAssetsPath, copyAssetsPath);
 }
 
 buildPage();
