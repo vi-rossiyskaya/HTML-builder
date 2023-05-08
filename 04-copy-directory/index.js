@@ -5,9 +5,9 @@ async function clearDestinationDir(path, name) {
   try {
     await access(join(path, name));
     await rm(join(path, name), { recursive: true });
-    makeDir(__dirname, 'files-copy').catch(console.error);
+    makeDir(path, name).catch(console.error);
   } catch {
-    makeDir(__dirname, 'files-copy').catch(console.error);
+    makeDir(path, name).catch(console.error);
   }
 }
 
