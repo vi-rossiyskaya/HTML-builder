@@ -1,20 +1,14 @@
 const { readdir, mkdir, copyFile, access, rm } = require('node:fs/promises');
 const { join } = require('path');
 
-async function clearDestinationDir(path, name) {
+async function clearDestinationDir(path) {
   try {
-    await access(join(path, name));
-    await rm(join(path, name), { recursive: true });
-    makeDir(path, name).catch(console.error);
+    await access(path);
+    await rm(path, { recursive: true });
+    await mkdir(path, { recursive: true });
   } catch {
-    makeDir(path, name).catch(console.error);
+    await mkdir(path, { recursive: true });
   }
-}
-
-async function makeDir(path, name) {
-  const dirCopyPath = join(path, name);
-  const dirCreation = await mkdir(dirCopyPath, { recursive: true });
-  return dirCreation;
 }
 
 async function makeDirCopy(srcPath, copyPath) {
@@ -23,7 +17,7 @@ async function makeDirCopy(srcPath, copyPath) {
     const updatedSrcPath = join(srcPath, item.name);
     const updatedCopyPath = join(copyPath, item.name);
     if(item.isDirectory()) {
-      makeDir(copyPath, item.name).catch(console.error);
+      mkdir(join(copyPath, item.name), { recursive: true });
       makeDirCopy(updatedSrcPath, updatedCopyPath).catch(console.error);
     } else {
       copyFile(updatedSrcPath, updatedCopyPath).catch(console.error);
@@ -32,7 +26,7 @@ async function makeDirCopy(srcPath, copyPath) {
 }
 
 async function init() {
-  await clearDestinationDir(__dirname,'files-copy');
+  await clearDestinationDir(join(__dirname,'files-copy'));
   await makeDirCopy(join(__dirname, 'files'), join(__dirname, 'files-copy')).catch(console.error);
   console.log('The directory has been copied successfully');
 }
