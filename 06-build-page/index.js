@@ -1,5 +1,7 @@
 const { readFile, readdir, mkdir, copyFile, writeFile, access, rm } = require('fs/promises');
-const { join } = require('path');
+const { join, extname } = require('path');
+const { pipeline } = require('node:stream/promises');
+const { createReadStream, createWriteStream } = require('node:fs');
 
 async function findTemplates(path) {
   const fileContent = await readFile(path, 'utf-8');
@@ -52,6 +54,29 @@ async function makeDirCopy(srcPath, copyPath) {
   });
 }
 
+async function getStyles(path) {
+  const files = await readdir(path, { withFileTypes: true });
+  const styles = files.filter(file => extname(file.name) === '.css');
+  return styles;
+}
+
+async function combineFiles(filePath, destPath) {
+  const input = createReadStream(filePath, 'utf-8');
+  const output = createWriteStream(destPath, { flags: 'a' });
+  await pipeline(
+    input,
+    output
+  );
+}
+
+async function combineStyles(srcDirPath, bundleFilePath) {
+  const styles = await getStyles(srcDirPath);
+  styles.forEach(async (file) => {
+    const filePath = join(srcDirPath, file.name);
+    await combineFiles(filePath, bundleFilePath);
+  });
+}
+
 async function buildPage() {
   mkdir(join(__dirname, 'project-dist'), { recursive: true });
   await buildHtml();
@@ -59,6 +84,10 @@ async function buildPage() {
   const copyAssetsPath = join(__dirname, 'project-dist', 'assets');
   await clearDestinationDir(copyAssetsPath);
   await makeDirCopy(srcAssetsPath, copyAssetsPath);
+  const stylesPath = join(__dirname, 'styles');
+  const bundlePath = join(__dirname, 'project-dist', 'style.css');
+  combineStyles(stylesPath, bundlePath);
+  console.log('Project has been builded!');
 }
 
 buildPage();
