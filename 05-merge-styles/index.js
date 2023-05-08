@@ -12,21 +12,21 @@ async function getStyles(path) {
   return styles;
 }
 
-async function combineFiles(filePath) {
+async function combineFiles(filePath, destPath) {
   const input = createReadStream(filePath, 'utf-8');
-  const output = createWriteStream(bundlePath, { flags: 'a' });
+  const output = createWriteStream(destPath, { flags: 'a' });
   await pipeline(
     input,
     output
   );
 }
 
-async function combineStyles() {
-  const styles = await getStyles(stylesPath);
+async function combineStyles(srcDirPath, bundleFilePath) {
+  const styles = await getStyles(srcDirPath);
   styles.forEach(async (file) => {
-    const filePath = join(stylesPath, file.name);
-    await combineFiles(filePath);
+    const filePath = join(srcDirPath, file.name);
+    await combineFiles(filePath, bundleFilePath);
   });
 }
 
-combineStyles();
+combineStyles(stylesPath, bundlePath);
