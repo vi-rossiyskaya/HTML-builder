@@ -70,6 +70,7 @@ async function combineFiles(filePath, destPath) {
 }
 
 async function combineStyles(srcDirPath, bundleFilePath) {
+  await writeFile(bundleFilePath, '');
   const styles = await getStyles(srcDirPath);
   styles.forEach(async (file) => {
     const filePath = join(srcDirPath, file.name);
