@@ -15,7 +15,7 @@ async function getFilesInfo(pathDir) {
     const filesInfo = files.map((file, index) => {
       const pathFile = path.join(pathDir, file.name);
       const name = path.parse(pathFile).name;
-      const extname = path.extname(pathFile);
+      const extname = path.extname(pathFile).slice(1);
       return `${name} - ${extname} - ${sizes[index]}b`;
     });
     filesInfo.forEach(file => console.log(file));
